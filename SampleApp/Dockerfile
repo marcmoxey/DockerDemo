@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src 
+COPY ./SampleApp.sln ./
+COPY ./SampleWebApp/SampleWebApp.csproj ./SampleWebApp/
+COPY ./TestProj/TestProj.csproj ./TestProj/
+RUN dotnet restore
+COPY . .
+RUN dotnet test ./TestProj/TestProj.csproj
+RUN dotnet publish ./SampleWebApp/SampleWebApp.csproj -c Release -o /app/
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final 
+WORKDIR /app
+COPY --from=build /app .
+EXPOSE 80
+EXPOSE 443 
+ENTRYPOINT ["dotnet", "SampleWebApp.dll"]
